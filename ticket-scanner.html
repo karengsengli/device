@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Ticket Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        select, input {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .direction-toggle {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .direction-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .direction-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .scanner-section {
+            margin-top: 20px;
+        }
+
+        #reader {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid #667eea;
+        }
+
+        .manual-input {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .manual-input input {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result.warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+
+        .result.preview {
+            background: #cce5ff;
+            border: 2px solid #004085;
+            color: #004085;
+        }
+
+        .confirm-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+            font-size: 16px;
+            padding: 15px 40px;
+        }
+
+        .btn-confirm:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            font-size: 16px;
+            padding: 15px 40px;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        .result h4 {
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .result-details {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .result-details div {
+            padding: 5px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .status-valid {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-invalid {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-used {
+            background: #ffc107;
+            color: #333;
+        }
+
+        @media (max-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚇 Railway Ticket Scanner</h1>
+            <p>Scan or enter ticket ID to validate entry/exit</p>
+        </div>
+
+        <div class="content">
+            <!-- Station Configuration -->
+            <div class="form-section">
+                <h3>📍 Scanner Location</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="region">Region</label>
+                        <select id="region">
+                            <option value="">Select Region...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Company</label>
+                        <select id="company" disabled>
+                            <option value="">Select Company...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="line">Line</label>
+                        <select id="line" disabled>
+                            <option value="">Select Line...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="station">Station</label>
+                        <select id="station" disabled>
+                            <option value="">Select Station...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Direction</label>
+                    <div class="direction-toggle">
+                        <button class="direction-btn active" data-direction="in" onclick="setDirection('in')">
+                            ⬇️ Entry (Check In)
+                        </button>
+                        <button class="direction-btn" data-direction="out" onclick="setDirection('out')">
+                            ⬆️ Exit (Check Out)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scanner Section -->
+            <div class="form-section scanner-section">
+                <h3>📷 Scan Ticket</h3>
+                <div id="reader" style="display: none;"></div>
+                <button id="startScan" class="btn btn-primary" onclick="startScanner()" style="width: 100%; margin-bottom: 15px;">
+                    Start Camera Scanner
+                </button>
+                <button id="stopScan" class="btn btn-secondary" onclick="stopScanner()" style="width: 100%; margin-bottom: 15px; display: none;">
+                    Stop Scanner
+                </button>
+
+                <div class="manual-input">
+                    <input type="text" id="ticketId" placeholder="Or enter Ticket ID manually (e.g., TKT-ABC123DEF456)">
+                    <button class="btn btn-primary" onclick="validateTicket()">Validate</button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;">Validating ticket...</p>
+            </div>
+
+            <!-- Result -->
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://fastapi-example-9o57.onrender.com/api';
+        let html5QrCode = null;
+        let selectedDirection = 'in';
+        let scannerConfig = {
+            region_id: null,
+            company_id: null,
+            line_id: null,
+            station_id: null
+        };
+        let pendingValidation = null; // Store validation result before confirmation
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRegions();
+        });
+
+        // Load Regions
+        async function loadRegions() {
+            try {
+                const response = await fetch(`${API_BASE}/regions/`);
+                const data = await response.json();
+
+                const regionSelect = document.getElementById('region');
+                data.regions.forEach(region => {
+                    const option = document.createElement('option');
+                    option.value = region.id;
+                    option.textContent = `${region.name} (${region.country})`;
+                    regionSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load regions:', error);
+                showResult('error', 'Failed to load regions', error.message);
+            }
+        }
+
+        // Load Companies when region selected
+        document.getElementById('region').addEventListener('change', async function(e) {
+            const regionId = e.target.value;
+            scannerConfig.region_id = regionId ? parseInt(regionId) : null;
+
+            const companySelect = document.getElementById('company');
+            const lineSelect = document.getElementById('line');
+            const stationSelect = document.getElementById('station');
+
+            // Reset dependent selects
+            companySelect.innerHTML = '<option value="">Select Company...</option>';
+            lineSelect.innerHTML = '<option value="">Select Line...</option>';
+            stationSelect.innerHTML = '<option value="">Select Station...</option>';
+            companySelect.disabled = !regionId;
+            lineSelect.disabled = true;
+            stationSelect.disabled = true;
+
+            if (!regionId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/companies/?region_id=${regionId}`);
+                const data = await response.json();
+
+                data.companies.forEach(company => {
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = `${company.name} (${company.code})`;
+                    companySelect.appendChild(option);
+                });
+            } catch (error) {
+                // Failed to load companies
+            }
+        });
+
+        // Load Lines when company selected
+        document.getElementById('company').addEventListener('change', async function(e) {
+            const companyId = e.target.value;
+            scannerConfig.company_id = companyId ? parseInt(companyId) : null;
+
+            const lineSelect = document.getElementById('line');
+            const stationSelect = document.getElementById('station');
+
+            lineSelect.innerHTML = '<option value="">Select Line...</option>';
+            stationSelect.innerHTML = '<option value="">Select Station...</option>';
+            lineSelect.disabled = !companyId;
+            stationSelect.disabled = true;
+
+            if (!companyId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/lines/?company_id=${companyId}`);
+                const data = await response.json();
+
+                data.lines.forEach(line => {
+                    const option = document.createElement('option');
+                    option.value = line.id;
+                    option.textContent = line.name;
+                    lineSelect.appendChild(option);
+                });
+            } catch (error) {
+                // Failed to load lines
+            }
+        });
+
+        // Load Stations when line selected
+        document.getElementById('line').addEventListener('change', async function(e) {
+            const lineId = e.target.value;
+            scannerConfig.line_id = lineId ? parseInt(lineId) : null;
+
+            const stationSelect = document.getElementById('station');
+            stationSelect.innerHTML = '<option value="">Select Station...</option>';
+            stationSelect.disabled = !lineId;
+
+            if (!lineId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/stations/line/${lineId}`);
+                const stations = await response.json();
+
+                stations.forEach(station => {
+                    const option = document.createElement('option');
+                    option.value = station.id;
+                    option.textContent = `${station.name} (${station.code})`;
+                    stationSelect.appendChild(option);
+                });
+            } catch (error) {
+                // Failed to load stations
+            }
+        });
+
+        // Update station config when station selected
+        document.getElementById('station').addEventListener('change', function(e) {
+            scannerConfig.station_id = e.target.value ? parseInt(e.target.value) : null;
+        });
+
+        // Set Direction
+        function setDirection(direction) {
+            selectedDirection = direction;
+            document.querySelectorAll('.direction-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.direction === direction);
+            });
+        }
+
+        // Start QR Scanner
+        async function startScanner() {
+            if (!scannerConfig.station_id) {
+                showResult('warning', 'Configuration Required', 'Please select Region, Company, Line, and Station first.');
+                return;
+            }
+
+            // Clear any previous results
+            document.getElementById('result').style.display = 'none';
+
+            document.getElementById('reader').style.display = 'block';
+            document.getElementById('startScan').style.display = 'none';
+            document.getElementById('stopScan').style.display = 'block';
+
+            // Show scanning status
+            showResult('preview', '📷 Scanner Active', 'Position QR code in the frame to scan...');
+
+            html5QrCode = new Html5Qrcode("reader");
+
+            const qrCodeConfig = {
+                fps: 30, // Increased from 10 to 30 for faster detection
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    // Make QR box responsive - 80% of smaller dimension for better coverage
+                    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                    let qrboxSize = Math.floor(minEdgeSize * 0.8);
+                    return {
+                        width: qrboxSize,
+                        height: qrboxSize
+                    };
+                },
+                aspectRatio: 1.0,
+                disableFlip: false, // Allow flipping to improve detection
+                videoConstraints: {
+                    facingMode: "environment",
+                    focusMode: "continuous", // Continuous autofocus
+                    advanced: [{ zoom: 1.0 }]
+                },
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true // Use native detector if available
+                }
+            };
+
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    qrCodeConfig,
+                    onScanSuccess,
+                    onScanFailure
+                );
+            } catch (error) {
+                showResult('error', 'Scanner Error', 'Failed to start camera. Please check permissions.');
+                stopScanner();
+            }
+        }
+
+        // Stop Scanner
+        async function stopScanner() {
+            if (html5QrCode) {
+                try {
+                    await html5QrCode.stop();
+                } catch (error) {
+                    // Silently handle stop errors
+                }
+                html5QrCode = null;
+            }
+
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('startScan').style.display = 'block';
+            document.getElementById('stopScan').style.display = 'none';
+        }
+
+        // QR Code Scan Success
+        function onScanSuccess(decodedText, decodedResult) {
+            // Provide immediate visual feedback
+            showResult('preview', '📷 QR Code Detected!', `Scanned: ${decodedText}`);
+
+            // Stop scanner immediately to prevent multiple scans
+            stopScanner();
+
+            // Set the ticket ID
+            document.getElementById('ticketId').value = decodedText;
+
+            // Validate the ticket after a brief delay to ensure UI updates
+            setTimeout(() => {
+                validateTicket();
+            }, 300);
+        }
+
+        // QR Code Scan Failure
+        function onScanFailure(error) {
+            // Silent - scanning in progress
+        }
+
+        // Validate Ticket (Preview Only - No DB record)
+        async function validateTicket() {
+            const ticketId = document.getElementById('ticketId').value.trim();
+
+            if (!ticketId) {
+                showResult('warning', 'Ticket ID Required', 'Please scan or enter a ticket ID.');
+                return;
+            }
+
+            if (!scannerConfig.station_id) {
+                showResult('warning', 'Configuration Required', 'Please select Region, Company, Line, and Station first.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            pendingValidation = null;
+
+            try {
+                // First, check ticket details without recording validation
+                const ticketsResponse = await fetch(`${API_BASE}/booking/tickets/all`);
+                const ticketsData = await ticketsResponse.json();
+                const tickets = ticketsData.tickets || [];
+
+                const ticket = tickets.find(t => t.ticket_unique_string === ticketId);
+
+                if (!ticket) {
+                    showResult('error', '❌ Invalid Ticket', `Ticket ID "${ticketId}" not found in the system.`);
+                    return;
+                }
+
+                // Get full ticket details
+                const detailsResponse = await fetch(`${API_BASE}/booking/tickets/${ticket.id}`);
+                const ticketDetails = await detailsResponse.json();
+
+                // Get validation history
+                const historyResponse = await fetch(`${API_BASE}/validation/ticket/${ticketId}/history`);
+                const history = await historyResponse.json();
+
+                const validations = history.validations || [];
+                const hasEntered = validations.some(v => v.validation_type === 'entry' && v.validation_status === 'approved');
+                const hasExited = validations.some(v => v.validation_type === 'exit' && v.validation_status === 'approved');
+                const entryValidation = validations.find(v => v.validation_type === 'entry' && v.validation_status === 'approved');
+                const exitValidation = validations.find(v => v.validation_type === 'exit' && v.validation_status === 'approved');
+
+                // Perform validation checks
+                const currentStation = scannerConfig.station_id;
+                const direction = selectedDirection;
+
+                // Check ticket status
+                if (ticketDetails.status === 'cancelled') {
+                    showResult('error', '❌ Cancelled Ticket', 'This ticket has been cancelled and cannot be used.');
+                    return;
+                }
+
+                // Check validity period
+                const now = new Date();
+                const validFrom = new Date(ticketDetails.valid_from);
+                const validUntil = new Date(ticketDetails.valid_until);
+
+                if (now < validFrom) {
+                    showResult('warning', '⏰ Not Yet Valid', `This ticket is valid from ${validFrom.toLocaleString()}.`);
+                    return;
+                }
+
+                if (now > validUntil) {
+                    showResult('error', '⏱️ Expired Ticket', `This ticket expired at ${validUntil.toLocaleString()}.`);
+                    return;
+                }
+
+                // Check if current station is in the route
+                const isInRoute = ticketDetails.segments.some(seg =>
+                    seg.from_station_id === currentStation || seg.to_station_id === currentStation
+                );
+
+                if (!isInRoute) {
+                    showResult('error', '🚫 Invalid Station', 'This ticket is not valid for the current station.');
+                    return;
+                }
+
+                // Check direction
+                const firstSegment = ticketDetails.segments[0];
+                const lastSegment = ticketDetails.segments[ticketDetails.segments.length - 1];
+
+                if (direction === 'in') {
+                    if (hasEntered && !hasExited) {
+                        showResult('error', '❌ Already Checked In', `This ticket was already used for entry at ${new Date(entryValidation.scanned_at).toLocaleString()}`);
+                        return;
+                    }
+                    if (hasEntered && hasExited) {
+                        showResult('error', '❌ Journey Completed', 'This ticket has already been used for a complete journey.');
+                        return;
+                    }
+                    if (firstSegment.from_station_id !== currentStation) {
+                        showResult('warning', '⚠️ Wrong Entry Point',
+                            `This ticket should start from ${firstSegment.from_station_name}, not here.`);
+                        return;
+                    }
+                } else {
+                    if (!hasEntered) {
+                        showResult('error', '❌ No Entry Record', 'Must check in before checking out.');
+                        return;
+                    }
+                    if (hasExited) {
+                        showResult('error', '❌ Already Checked Out', `This ticket was already used for exit at ${new Date(exitValidation.scanned_at).toLocaleString()}`);
+                        return;
+                    }
+                    if (lastSegment.to_station_id !== currentStation) {
+                        showResult('warning', '⚠️ Wrong Exit Point',
+                            `This ticket should end at ${lastSegment.to_station_name}, not here.`);
+                        return;
+                    }
+                }
+
+                // All checks passed - Show preview with confirm button
+                const entryTime = entryValidation ? new Date(entryValidation.scanned_at).toLocaleString() : 'N/A';
+
+                const resultHtml = `
+                    <h4>✅ Ticket Valid - PREVIEW <span class="status-badge status-valid">${direction.toUpperCase()}</span></h4>
+                    <div class="result-details">
+                        <div><strong>⚠️ PREVIEW MODE - Not yet recorded</strong></div>
+                        <div style="height: 10px;"></div>
+                        <div><strong>Ticket ID:</strong> ${ticketDetails.ticket_unique_string}</div>
+                        <div><strong>Passenger:</strong> ${ticketDetails.user_name || 'Unknown'} (${ticketDetails.user_email || 'N/A'})</div>
+                        <div><strong>Route:</strong> ${firstSegment.from_station_name} → ${lastSegment.to_station_name}</div>
+                        <div><strong>Lines:</strong> ${ticketDetails.segments.map(s => s.line_name).join(' → ')}</div>
+                        <div><strong>Total Fare:</strong> ฿${ticketDetails.total_amount.toFixed(2)}</div>
+                        <div><strong>Valid Until:</strong> ${validUntil.toLocaleString()}</div>
+                        ${hasEntered ? `<div><strong>Entry Time:</strong> ${entryTime}</div>` : ''}
+                    </div>
+                    <div class="confirm-section">
+                        <button class="btn btn-cancel" onclick="cancelValidation()">Cancel</button>
+                        <button class="btn btn-confirm" onclick="confirmValidation()">✓ Confirm ${direction === 'in' ? 'Check-In' : 'Check-Out'}</button>
+                    </div>
+                `;
+
+                // Store pending validation data
+                pendingValidation = {
+                    ticket_unique_string: ticketId,
+                    station_id: scannerConfig.station_id,
+                    line_id: scannerConfig.line_id,
+                    company_id: scannerConfig.company_id,
+                    region_id: scannerConfig.region_id,
+                    validation_type: selectedDirection === 'in' ? 'entry' : 'exit',
+                    scanner_device_id: 'WEB_SCANNER_' + Date.now()
+                };
+
+                document.getElementById('result').className = 'result preview';
+                document.getElementById('result').innerHTML = resultHtml;
+                document.getElementById('result').style.display = 'block';
+
+            } catch (error) {
+                showResult('error', '❌ Validation Failed', error.message || 'Unable to connect to server');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Confirm Validation - Actually record to database
+        async function confirmValidation() {
+            if (!pendingValidation) {
+                showResult('error', 'Error', 'No pending validation to confirm');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/validation/validate-ticket`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(pendingValidation)
+                });
+
+                const result = await response.json();
+
+                if (result.valid) {
+                    // Success - Display confirmation
+                    const validUntil = new Date(result.valid_until);
+                    const entryTime = result.entry_time ? new Date(result.entry_time).toLocaleString() : 'N/A';
+                    const exitTime = result.exit_time ? new Date(result.exit_time).toLocaleString() : 'N/A';
+
+                    const resultHtml = `
+                        <h4>✅ ${result.message} - CONFIRMED <span class="status-badge status-valid">${pendingValidation.validation_type.toUpperCase()}</span></h4>
+                        <div class="result-details">
+                            <div><strong>✓ Successfully recorded to database</strong></div>
+                            <div style="height: 10px;"></div>
+                            <div><strong>Ticket ID:</strong> ${result.ticket_unique_string}</div>
+                            <div><strong>Passenger:</strong> ${result.passenger_name || 'Unknown'}</div>
+                            <div><strong>Route:</strong> ${result.from_station} → ${result.to_station}</div>
+                            <div><strong>Lines:</strong> ${result.route_lines ? result.route_lines.join(' → ') : 'N/A'}</div>
+                            <div><strong>Total Fare:</strong> ฿${result.total_amount ? result.total_amount.toFixed(2) : 'N/A'}</div>
+                            <div><strong>Valid Until:</strong> ${validUntil.toLocaleString()}</div>
+                            ${result.entry_time ? `<div><strong>Entry Time:</strong> ${entryTime}</div>` : ''}
+                            ${result.exit_time ? `<div><strong>Exit Time:</strong> ${exitTime}</div>` : ''}
+                        </div>
+                    `;
+
+                    document.getElementById('result').className = 'result success';
+                    document.getElementById('result').innerHTML = resultHtml;
+                    document.getElementById('result').style.display = 'block';
+                    playSound('success');
+
+                    // Clear ticket input
+                    document.getElementById('ticketId').value = '';
+                    pendingValidation = null;
+
+                } else {
+                    showResult('error', '❌ ' + result.message, result.rejection_reason);
+                }
+
+            } catch (error) {
+                showResult('error', '❌ Confirmation Failed', error.message || 'Unable to connect to server');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Cancel Validation
+        function cancelValidation() {
+            pendingValidation = null;
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('ticketId').value = '';
+        }
+
+        // Show Result
+        function showResult(type, title, message) {
+            document.getElementById('loading').style.display = 'none';
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `
+                <h4>${title}</h4>
+                <p>${message}</p>
+            `;
+            resultDiv.style.display = 'block';
+
+            // Play sound based on result
+            if (type === 'success') {
+                playSound('success');
+            } else if (type === 'error') {
+                playSound('error');
+            }
+        }
+
+        // Play Sound (optional)
+        function playSound(type) {
+            // You can add audio files and play them here
+            // const audio = new Audio(type === 'success' ? 'success.mp3' : 'error.mp3');
+            // audio.play();
+        }
+
+        // Allow Enter key to validate
+        document.getElementById('ticketId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                validateTicket();
+            }
+        });
+    </script>
+</body>
+</html>
